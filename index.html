@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <title>Random Positions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+      /* --- VARIABLES & THEMES --- */
+      :root {
+        --font-display: 'Playfair Display', serif;
+        --font-body: 'Montserrat', sans-serif;
+        --circle-size: 80vw; 
+        --max-circle: 500px;
+      }
+      .theme-1 { --bg: #2D0A12; --text: #E8A2B6; --accent: #D7263D; --sec: #D9B778; --dark: #4A0F24; }
+      .theme-2 { --bg: #47233F; --text: #F2C7CE; --accent: #A25A79; --sec: #FFF2E8; --dark: #C5838B; }
+      .theme-3 { --bg: #0B0B0B; --text: #CFCFCF; --accent: #C21E40; --sec: #7F3F82; --dark: #1C1A33; }
+      .theme-4 { --bg: #5C3A31; --text: #F5C9B8; --accent: #D18166; --sec: #C98F6B; --dark: #C4646B; }
+      .theme-5 { --bg: #1C1139; --text: #F4F2FF; --accent: #FF2DA3; --sec: #7317D7; --dark: #FF6BBF; }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 0.5s ease;
+      }
+
+      .view {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+      .active-view { opacity: 1; pointer-events: auto; }
+      .hidden { display: none !important; }
+
+      .login-title {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        margin-bottom: 2rem;
+        color: var(--accent);
+      }
+
+      #login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 80%;
+        max-width: 300px;
+      }
+
+      input, select, textarea {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid var(--dark);
+        padding: 12px;
+        color: var(--text);
+        border-radius: 5px;
+        outline: none;
+        font-family: var(--font-body);
+      }
+      input::placeholder { color: rgba(255,255,255,0.4); }
+
+      .btn-primary {
+        background: var(--accent);
+        color: var(--bg);
+        border: none;
+        padding: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: filter 0.2s;
+      }
+      .btn-primary:hover { filter: brightness(1.2); }
+
+      #login-error {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--sec);
+      }
+      #login-error a { color: var(--accent); text-decoration: none; border-bottom: 1px solid; }
+
+      .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+      }
+
+      .circle-wrapper {
+        width: var(--circle-size);
+        height: var(--circle-size);
+        max-width: var(--max-circle);
+        max-height: var(--max-circle);
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      .circle-base {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: var(--dark);
+        border: 4px solid var(--accent);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .circle-base:active { transform: scale(0.98); }
+
+      #start-text {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        letter-spacing: 2px;
+        pointer-events: none;
+      }
+
+      #result-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      #shuffle-overlay {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: var(--accent);
+        opacity: 0.8;
+        mix-blend-mode: overlay;
+      }
+
+      @keyframes flash {
+        0% { background: var(--accent); }
+        50% { background: var(--sec); }
+        100% { background: var(--text); }
+      }
+      .shuffling .circle-base { animation: pulseBorder 0.2s infinite; }
+      .shuffling #shuffle-overlay { display: block !important; animation: flash 0.1s infinite; }
+
+      #image-name {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        text-align: center;
+        min-height: 1.5rem;
+      }
+
+      #controls { display: flex; gap: 15px; }
+
+      .btn-control {
+        background: transparent;
+        border: 2px solid var(--sec);
+        color: var(--sec);
+        padding: 10px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-weight: 500;
+      }
+      .btn-control:hover { background: var(--sec); color: var(--bg); }
+
+      #initial-trigger {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 80%;
+        z-index: 10;
+      }
+
+      /* ADMIN FAB */
+      #admin-fab {
+        position: absolute;
+        top: 20px; right: 20px;
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        background: var(--sec);
+        color: var(--bg);
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        z-index: 100;
+      }
+
+      /* LOGOUT BUTTON */
+      #logout-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: transparent;
+        color: var(--sec);
+        border: 1px solid var(--sec);
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-family: var(--font-body);
+        z-index: 100;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+      }
+      #logout-btn:hover {
+        background: var(--sec);
+        color: var(--bg);
+      }
+
+      /* COPYRIGHT FOOTER */
+      .copyright-footer {
+        position: absolute;
+        bottom: 15px;
+        width: 100%;
+        text-align: center;
+        font-family: var(--font-body);
+        font-size: 0.75rem;
+        color: var(--text);
+        opacity: 0.6;
+        z-index: 50;
+        pointer-events: none;
+        letter-spacing: 0.5px;
+      }
+
+      .modal {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+      }
+      .modal-content {
+        background: var(--bg);
+        padding: 30px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid var(--accent);
+        position: relative;
+      }
+      .close {
+        position: absolute;
+        top: 10px; right: 15px;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      #modal-desc { margin-top: 10px; line-height: 1.5; }
+
+      @media (min-width: 768px) { :root { --circle-size: 400px; } }
+    </style>
+  </head>
+  <body>
+    <div id="theme-layer"></div>
+
+    <!-- LOGIN VIEW -->
+    <div id="view-login" class="view active-view">
+      <h1 class="login-title">Login</h1>
+      <form id="login-form">
+        <input type="text" id="u-in" placeholder="Username" required autocomplete="off">
+        <input type="password" id="p-in" placeholder="Password" required>
+        <!-- Button Text Changed -->
+        <button type="submit" class="btn-primary">Enter to feel Happiness</button>
+      </form>
+      <div id="login-error" class="hidden">
+        Invalid credentials. <br> <a href="mailto:infquantumspace@gmail.com">Please contact admin</a>
+      </div>
+    </div>
+
+    <!-- MAIN APP VIEW -->
+    <div id="view-app" class="view hidden">
+      <!-- Logout Button Added -->
+      <button id="logout-btn" onclick="logout()">Logout</button>
+      
+      <button id="admin-fab" class="hidden" onclick="toggleUploadModal()">+</button>
+      <div class="game-container">
+        <div class="circle-wrapper">
+          <div id="display-circle" class="circle-base">
+            <span id="start-text">START</span>
+            <img id="result-img" class="hidden" src="" alt="Result">
+            <div id="shuffle-overlay" class="hidden"></div>
+          </div>
+        </div>
+        <h2 id="image-name" class="hidden">Image Name</h2>
+        <div id="controls" class="hidden">
+          <button class="btn-control" onclick="runGame()">One More</button>
+          <!-- Button Text Changed -->
+          <button class="btn-control" onclick="showAbout()">How?</button>
+        </div>
+        <div id="initial-trigger" onclick="runGame()"></div>
+      </div>
+    </div>
+
+    <!-- COPYRIGHT FOOTER -->
+    <div class="copyright-footer">
+      &copy | All Rights Reserved to IQS
+    </div>
+
+    <!-- ABOUT MODAL -->
+    <div id="modal-about" class="modal hidden">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-about')">&times;</span>
+        <h3 id="modal-title"></h3>
+        <p id="modal-desc"></p>
+      </div>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div id="modal-upload" class="modal hidden">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-upload')">&times;</span>
+        <h3>Upload Image</h3>
+        <form id="upload-form">
+          <input type="file" id="up-file" required>
+          <input type="text" id="up-name" placeholder="Image Name" required>
+          <textarea id="up-desc" placeholder="Description (Optional)"></textarea>
+          <select id="up-folder">
+            <option value="G">G</option>
+            <option value="OHm">OHm</option>
+            <option value="OHr">OHr</option>
+          </select>
+          <button type="submit" class="btn-primary">Upload</button>
+          <p id="upload-status"></p>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let currentUser = null;
+      let currentRole = null;
+      let currentImage = null;
+      let inactivityTimer;
+
+      window.onload = function() {
+        applyRandomTheme();
+        startInactivityTimer();
+      };
+      document.addEventListener('click', resetInactivityTimer);
+      document.addEventListener('touchstart', resetInactivityTimer);
+
+      function startInactivityTimer() {
+        inactivityTimer = setTimeout(() => { alert("Session expired."); location.reload(); }, 3600000);
+      }
+      function resetInactivityTimer() { clearTimeout(inactivityTimer); startInactivityTimer(); }
+
+      function applyRandomTheme() {
+        const themes = ['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5'];
+        document.body.className = themes[Math.floor(Math.random() * themes.length)];
+      }
+
+      // LOGOUT FUNCTION
+      function logout() {
+        // Simple reload effectively clears simple session state
+        location.reload();
+      }
+
+      // LOGIN
+      const loginForm = document.getElementById('login-form');
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const u = document.getElementById('u-in').value;
+        const p = document.getElementById('p-in').value;
+        const btn = loginForm.querySelector('button');
+        // Temporarily change text for feedback
+        const originalText = btn.innerText;
+        btn.innerText = "Verifying...";
+        btn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if(res.success) {
+              currentUser = res.username;
+              currentRole = res.role;
+              document.getElementById('view-login').classList.add('hidden');
+              document.getElementById('view-app').classList.remove('hidden');
+              setTimeout(() => document.getElementById('view-app').classList.add('active-view'), 50);
+              if(currentRole === 'Admin') document.getElementById('admin-fab').classList.remove('hidden');
+            } else {
+              document.getElementById('login-error').classList.remove('hidden');
+              btn.innerText = originalText;
+              btn.disabled = false;
+            }
+          })
+          .withFailureHandler(function(err) { alert("Error: "+err); btn.innerText = originalText; btn.disabled=false; })
+          .doLogin(u, p);
+      });
+
+      // GAME LOOP
+      function runGame() {
+        document.getElementById('start-text').classList.add('hidden');
+        document.getElementById('initial-trigger').classList.add('hidden');
+        document.getElementById('controls').classList.add('hidden');
+        document.getElementById('image-name').classList.add('hidden');
+        document.getElementById('result-img').classList.add('hidden'); 
+        
+        document.body.classList.add('shuffling');
+        
+        google.script.run
+          .withSuccessHandler(onImageReceived)
+          .withFailureHandler(function(e){ alert("Game Error: "+e); document.body.classList.remove('shuffling'); })
+          .getUnseenImage(currentUser);
+      }
+
+      function onImageReceived(imgData) {
+        if(imgData.error) {
+          alert(imgData.error);
+          document.body.classList.remove('shuffling');
+          return;
+        }
+        
+        currentImage = imgData;
+        const imgObj = new Image();
+        
+        // Load from Data URI (Base64)
+        imgObj.src = imgData.image; 
+
+        // Wait for animation
+        setTimeout(() => {
+          revealImage(imgData.image, imgData.name);
+        }, 6000); 
+      }
+
+      function revealImage(src, name) {
+        document.body.classList.remove('shuffling');
+        const resImg = document.getElementById('result-img');
+        resImg.src = src;
+        resImg.classList.remove('hidden');
+        document.getElementById('image-name').innerText = name;
+        document.getElementById('image-name').classList.remove('hidden');
+        document.getElementById('controls').classList.remove('hidden');
+      }
+
+      // MODALS
+      function showAbout() {
+        if(!currentImage) return;
+        document.getElementById('modal-title').innerText = currentImage.name;
+        document.getElementById('modal-desc').innerText = currentImage.desc || "No description provided.";
+        document.getElementById('modal-about').classList.remove('hidden');
+      }
+      function toggleUploadModal() { document.getElementById('modal-upload').classList.remove('hidden'); }
+      function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+      // UPLOAD
+      document.getElementById('upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const file = document.getElementById('up-file').files[0];
+        const name = document.getElementById('up-name').value;
+        const desc = document.getElementById('up-desc').value;
+        const folder = document.getElementById('up-folder').value;
+        const status = document.getElementById('upload-status');
+        const btn = this.querySelector('button');
+
+        if(!file) return;
+        btn.disabled = true; status.innerText = "Uploading...";
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+          const raw = e.target.result;
+          const base64Data = raw.split(',')[1];
+          const payload = { data: base64Data, mimeType: file.type, fileName: file.name };
+
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if(res.success) {
+                status.innerText = "Success!";
+                setTimeout(() => { closeModal('modal-upload'); status.innerText=""; document.getElementById('upload-form').reset(); btn.disabled=false; }, 1500);
+              } else {
+                status.innerText = "Error: " + res.error; btn.disabled=false;
+              }
+            })
+            .uploadFileToDrive(payload, name, desc, folder);
+        };
+      });
+    </script>
+  </body>
+</html>
