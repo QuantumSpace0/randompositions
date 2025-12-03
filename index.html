@@ -70,22 +70,6 @@
         color: var(--accent);
       }
 
-      /* LOGO STYLE */
-      .login-logo {
-        width: 120px; /* Medium Size */
-        height: auto;
-        margin-bottom: 10px;
-        border-radius: 50%; /* Optional: Makes it circular if square */
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        animation: float 6s ease-in-out infinite;
-      }
-
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-5px); }
-        100% { transform: translateY(0px); }
-      }
-
       #login-form {
         display: flex;
         flex-direction: column;
@@ -327,9 +311,6 @@
 
     <!-- LOGIN VIEW -->
     <div id="view-login" class="view active-view">
-      <!-- LOGO ADDED HERE -->
-      <img src="grrvr.jpg" alt="Logo" class="login-logo">
-      
       <h1 class="login-title">Login</h1>
       <form id="login-form">
         <input type="text" id="u-in" placeholder="Username" required autocomplete="off">
