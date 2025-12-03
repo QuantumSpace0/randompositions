@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Random Positions</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- Fonts: Cinzel, Lato, Cormorant Garamond -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&family=Cormorant+Garamond:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
       /* --- VARIABLES & THEMES --- */
       :root {
-        --font-display: 'Playfair Display', serif;
-        --font-body: 'Montserrat', sans-serif;
+        --font-display: 'Cinzel', serif; 
+        --font-body: 'Lato', sans-serif;
         --circle-size: 80vw; 
         --max-circle: 500px;
       }
@@ -49,11 +52,38 @@
       .active-view { opacity: 1; pointer-events: auto; }
       .hidden { display: none !important; }
 
+      /* --- ELEGANT TITLE --- */
+      .app-title {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        color: var(--accent);
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      
       .login-title {
         font-family: var(--font-display);
         font-size: 3rem;
         margin-bottom: 2rem;
         color: var(--accent);
+      }
+
+      /* LOGO STYLE */
+      .login-logo {
+        width: 120px; /* Medium Size */
+        height: auto;
+        margin-bottom: 10px;
+        border-radius: 50%; /* Optional: Makes it circular if square */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0px); }
       }
 
       #login-form {
@@ -85,6 +115,8 @@
         cursor: pointer;
         border-radius: 5px;
         transition: filter 0.2s;
+        font-family: var(--font-display); 
+        letter-spacing: 1px;
       }
       .btn-primary:hover { filter: brightness(1.2); }
 
@@ -129,11 +161,14 @@
       }
       .circle-base:active { transform: scale(0.98); }
 
+      /* --- UPDATED START BUTTON STYLE --- */
       #start-text {
-        font-family: var(--font-display);
-        font-size: 2rem;
-        letter-spacing: 2px;
+        font-family: var(--font-display); /* Changed to Cinzel */
+        font-size: 3rem; 
+        letter-spacing: 5px; /* Wider tracking */
         pointer-events: none;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(255,255,255,0.3); /* Subtle Glow */
       }
 
       #result-img {
@@ -188,6 +223,7 @@
         z-index: 10;
       }
 
+      /* ADMIN FAB */
       #admin-fab {
         position: absolute;
         top: 20px; right: 20px;
@@ -202,24 +238,27 @@
         z-index: 100;
       }
 
-      #logout-btn {
+      /* USER PROFILE BUTTON */
+      #user-btn {
         position: absolute;
         top: 20px;
         left: 20px;
         background: transparent;
         color: var(--sec);
         border: 1px solid var(--sec);
-        padding: 8px 15px;
-        border-radius: 20px;
+        width: 40px; height: 40px;
+        border-radius: 50%;
         cursor: pointer;
-        font-family: var(--font-body);
+        font-size: 1.2rem;
         z-index: 100;
-        text-transform: uppercase;
-        font-size: 0.8rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         transition: all 0.2s;
       }
-      #logout-btn:hover { background: var(--sec); color: var(--bg); }
+      #user-btn:hover { background: var(--sec); color: var(--bg); }
 
+      /* COPYRIGHT FOOTER */
       .copyright-footer {
         position: absolute;
         bottom: 15px;
@@ -254,20 +293,43 @@
         border: 1px solid var(--accent);
         position: relative;
       }
+      /* Modal Headers */
+      .modal-content h3, .modal-content h4 {
+        font-family: var(--font-display);
+        color: var(--accent);
+        margin-bottom: 15px;
+        text-align: center;
+        font-weight: 700;
+      }
+
       .close {
         position: absolute;
         top: 10px; right: 15px;
         font-size: 1.5rem;
         cursor: pointer;
       }
-      #modal-desc { margin-top: 10px; line-height: 1.5; }
+      
+      .profile-info { margin-bottom: 20px; }
+      .profile-info p { margin: 10px 0; font-size: 0.9rem; }
+      /* Labels */
+      .profile-info strong { 
+        color: var(--accent); 
+        font-family: var(--font-display);
+        letter-spacing: 0.5px;
+      }
+      .btn-danger { background: #d7263d; margin-top: 10px; width: 100%; }
+
       @media (min-width: 768px) { :root { --circle-size: 400px; } }
     </style>
   </head>
   <body>
     <div id="theme-layer"></div>
 
+    <!-- LOGIN VIEW -->
     <div id="view-login" class="view active-view">
+      <!-- LOGO ADDED HERE -->
+      <img src="grrvr.jpg" alt="Logo" class="login-logo">
+      
       <h1 class="login-title">Login</h1>
       <form id="login-form">
         <input type="text" id="u-in" placeholder="Username" required autocomplete="off">
@@ -277,12 +339,17 @@
       <div id="login-error" class="hidden">
         Invalid credentials. <br> <a href="mailto:infquantumspace@gmail.com">Please contact admin</a>
       </div>
+      <div class="copyright-footer">&copy; 2025 | All Rights Reserved to IQS</div>
     </div>
 
+    <!-- MAIN APP VIEW -->
     <div id="view-app" class="view hidden">
-      <button id="logout-btn" onclick="logout()">Logout</button>
+      <button id="user-btn" onclick="openProfile()"><i class="fas fa-user"></i></button>
       <button id="admin-fab" class="hidden" onclick="toggleUploadModal()">+</button>
+      
       <div class="game-container">
+        <h1 class="app-title">Random Positions</h1>
+
         <div class="circle-wrapper">
           <div id="display-circle" class="circle-base">
             <span id="start-text">START</span>
@@ -297,18 +364,38 @@
         </div>
         <div id="initial-trigger" onclick="runGame()"></div>
       </div>
+      <div class="copyright-footer">&copy; 2025 | All Rights Reserved to IQS</div>
     </div>
 
-    <div class="copyright-footer">&copy 2025 | All Rights Reserved to IQS</div>
+    <!-- PROFILE MODAL -->
+    <div id="modal-profile" class="modal hidden">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-profile')">&times;</span>
+        <h3>Account Details</h3>
+        <div class="profile-info">
+          <p><strong>Username:</strong> <span id="prof-user"></span></p>
+          <p><strong>Role:</strong> <span id="prof-role"></span></p>
+        </div>
+        <hr style="border-color: var(--dark); opacity: 0.5; margin: 15px 0;">
+        <h4>Change Password</h4>
+        <form id="pass-form" style="margin-top:10px;">
+          <input type="text" id="new-pass" placeholder="New Password" required>
+          <button type="submit" class="btn-primary" style="margin-top:10px;">Update Password</button>
+        </form>
+        <button class="btn-primary btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </div>
 
+    <!-- ABOUT MODAL -->
     <div id="modal-about" class="modal hidden">
       <div class="modal-content">
         <span class="close" onclick="closeModal('modal-about')">&times;</span>
         <h3 id="modal-title"></h3>
-        <p id="modal-desc"></p>
+        <p id="modal-desc" style="margin-top: 10px; line-height: 1.5;"></p>
       </div>
     </div>
 
+    <!-- UPLOAD MODAL -->
     <div id="modal-upload" class="modal hidden">
       <div class="modal-content">
         <span class="close" onclick="closeModal('modal-upload')">&times;</span>
@@ -321,6 +408,8 @@
             <option value="G">G</option>
             <option value="OHm">OHm</option>
             <option value="OHr">OHr</option>
+            <option value="MHm">MHm</option> 
+            <option value="MHr">MHr</option> 
           </select>
           <button type="submit" class="btn-primary">Upload</button>
           <p id="upload-status"></p>
@@ -330,22 +419,15 @@
 
     <script>
       // --- IMPORTANT: PASTE YOUR GOOGLE SCRIPT URL HERE ---
-      const API_URL = "https://script.google.com/macros/s/AKfycbxn3IhI6uwSb7OgoEzEjzb0c3Ll4FSokhs48rKwQEHkZKwxWGGVH34ooZKQB4_g-FGn/exec";
+      const API_URL = "https://script.google.com/macros/s/AKfycbxPcYtA_YhuggBIQu8WwErxi1-5BulHgAS9cOo6uV59yCLwV0vh6WiVLJsXZ_Kxz5CE/exec";
 
       // --- HELPER: API CALLER ---
       async function callApi(payload) {
-        if(API_URL.includes("PASTE_YOUR")) { alert("Setup Error: You forgot to paste the API URL in index.html"); return null; }
-        
+        if(API_URL.includes("PASTE_YOUR")) { alert("Setup Error: API URL not set in index.html"); return null; }
         try {
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-          });
+          const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
           return await res.json();
-        } catch (e) {
-          alert("Connection Error: " + e.message);
-          return null;
-        }
+        } catch (e) { alert("Connection Error: " + e.message); return null; }
       }
 
       let currentUser = null;
@@ -365,6 +447,7 @@
       function applyRandomTheme() { document.body.className = ['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5'][Math.floor(Math.random() * 5)]; }
       function logout() { location.reload(); }
 
+      // LOGIN
       const loginForm = document.getElementById('login-form');
       loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -391,6 +474,7 @@
         }
       });
 
+      // GAME LOOP
       async function runGame() {
         document.getElementById('start-text').classList.add('hidden');
         document.getElementById('initial-trigger').classList.add('hidden');
@@ -426,6 +510,32 @@
         document.getElementById('controls').classList.remove('hidden');
       }
 
+      // MODALS
+      function openProfile() {
+        document.getElementById('prof-user').innerText = currentUser;
+        document.getElementById('prof-role').innerText = currentRole;
+        document.getElementById('modal-profile').classList.remove('hidden');
+      }
+
+      document.getElementById('pass-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const newP = document.getElementById('new-pass').value;
+        const btn = this.querySelector('button');
+        btn.innerText = "Updating...";
+        btn.disabled = true;
+
+        const res = await callApi({ action: 'changePassword', username: currentUser, newPassword: newP });
+        
+        if(res && res.success) {
+          alert("Password updated!");
+          document.getElementById('new-pass').value = "";
+        } else {
+          alert("Error: " + (res ? res.error : "Failed"));
+        }
+        btn.innerText = "Update Password";
+        btn.disabled = false;
+      });
+
       function showAbout() {
         if(!currentImage) return;
         document.getElementById('modal-title').innerText = currentImage.name;
@@ -435,6 +545,7 @@
       function toggleUploadModal() { document.getElementById('modal-upload').classList.remove('hidden'); }
       function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+      // UPLOAD
       document.getElementById('upload-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const file = document.getElementById('up-file').files[0];
