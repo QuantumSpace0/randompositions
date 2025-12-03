@@ -7,23 +7,24 @@ const SPREADSHEET_ID = '1Ph5s4sHIIRI0zP9Q4A8LRjbERu7ithmke8h8PKAfzKQ';
 const FOLDER_ID_G    = '14s8aJ_SzyU4MSD-Gg_CbrxelLM0wZTcV';
 const FOLDER_ID_OHM  = '18xMOQhA-kkP2FtO0C-asU3Og-TnCD6z9';
 const FOLDER_ID_OHR  = '1glrttlvA7ky1ONuoyFkveiIXNtYUO7m3';
+const FOLDER_ID_MHM  = '1pWn_1rDcRtNzHH7Kxv6uKZLGbolchOIl'; // NEW
+const FOLDER_ID_MHR  = '17nPH67lp8H4pv5K-vLNQmweb0rf0RblP'; // NEW
 
 const FOLDER_MAP = {
   'G': FOLDER_ID_G,
   'OHm': FOLDER_ID_OHM,
-  'OHr': FOLDER_ID_OHR
+  'OHr': FOLDER_ID_OHR,
+  'MHm': FOLDER_ID_MHM,
+  'MHr': FOLDER_ID_MHR
 };
 
-// --- API ENTRY POINT (Vercel calls this) ---
-
+// --- API ENTRY POINT ---
 function doGet(e) {
   return ContentService.createTextOutput("Quantum Space API is Online. Please use POST.")
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
 function doPost(e) {
-  // CORS Header handling mechanism for Vercel connectivity
-  // We process the request and return JSON
   var data;
   try {
     data = JSON.parse(e.postData.contents);
@@ -44,6 +45,8 @@ function doPost(e) {
       response = { success: true };
     } else if (action === 'upload') {
       response = uploadFileToDrive(data);
+    } else if (action === 'changePassword') {
+      response = changePassword(data.username, data.newPassword);
     }
   } catch (error) {
     response = { success: false, error: error.toString() };
@@ -57,7 +60,7 @@ function sendJSON(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// --- CORE LOGIC (Same as before, adapted for API) ---
+// --- CORE LOGIC ---
 
 function getDatabase() {
   if (!SPREADSHEET_ID || SPREADSHEET_ID.includes('YOUR_SPREADSHEET_ID')) {
@@ -75,10 +78,26 @@ function doLogin(username, password) {
     if (String(data[i][0]).toLowerCase() === String(username).toLowerCase() && 
         String(data[i][1]) === String(password)) {
       logLogin(username); 
-      return { success: true, role: data[i][2], username: data[i][0] };
+      // Return password too so user can see it in profile
+      return { success: true, role: data[i][2], username: data[i][0], password: data[i][1] };
     }
   }
   return { success: false, error: "Invalid Credentials" };
+}
+
+function changePassword(username, newPassword) {
+  const ss = getDatabase();
+  const sheet = ss.getSheetByName('Users');
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]).toLowerCase() === String(username).toLowerCase()) {
+      // Set new password in Column B (index 1 + 1 for 1-based row)
+      sheet.getRange(i + 1, 2).setValue(newPassword);
+      return { success: true };
+    }
+  }
+  return { success: false, error: "User not found" };
 }
 
 function logLogin(username) {
@@ -94,13 +113,45 @@ function getUnseenImage(username) {
   const ss = getDatabase();
   const imgSheet = ss.getSheetByName('Images');
   const seenSheet = ss.getSheetByName('SeenHistory');
+  const userSheet = ss.getSheetByName('Users');
   
-  const allImages = imgSheet.getDataRange().getValues().slice(1);
-  if (allImages.length === 0) return { error: "No images in database." };
+  // 1. DETERMINE USER ROLE
+  const userData = userSheet.getDataRange().getValues();
+  let userRole = "";
+  for(let i=1; i<userData.length; i++) {
+    if(String(userData[i][0]).toLowerCase() === String(username).toLowerCase()) {
+      userRole = userData[i][2];
+      break;
+    }
+  }
 
+  // 2. DEFINE ALLOWED FOLDERS BASED ON ROLE
+  let allowedFolders = [];
+  if (userRole === 'InterCo') {
+    allowedFolders = ['G', 'OHm', 'OHr'];
+  } else if (userRole === 'MHm') {
+    allowedFolders = ['MHm'];
+  } else if (userRole === 'MHr') {
+    allowedFolders = ['MHr'];
+  } else if (userRole === 'Admin') {
+    // Admin sees everything
+    allowedFolders = ['G', 'OHm', 'OHr', 'MHm', 'MHr'];
+  } else {
+    // Default fallback or error
+    return { error: "User Role '" + userRole + "' has no folder access configured." };
+  }
+
+  // 3. GET IMAGES
+  const allImagesRaw = imgSheet.getDataRange().getValues().slice(1);
+  if (allImagesRaw.length === 0) return { error: "No images in database." };
+
+  // Filter images by allowed folders (Column E is Subfolder, index 4)
+  const allImages = allImagesRaw.filter(row => allowedFolders.includes(row[4]));
+
+  if (allImages.length === 0) return { error: "No images found for your role (" + userRole + ")." };
+
+  // 4. FREQUENCY LOGIC (Same as before)
   const seenData = seenSheet.getDataRange().getValues();
-  
-  // Frequency based logic
   const imageMap = {};
   allImages.forEach(row => imageMap[row[0]] = row);
   const allImageIds = Object.keys(imageMap);
