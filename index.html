@@ -14,6 +14,7 @@
       :root {
         --font-display: 'Cinzel', serif; 
         --font-body: 'Lato', sans-serif;
+        --font-elegant: 'Cormorant Garamond', serif; /* Variable for the elegant font */
         --circle-size: 80vw; 
         --max-circle: 500px;
       }
@@ -89,6 +90,36 @@
       }
       input::placeholder { color: rgba(255,255,255,0.4); }
 
+      /* --- CAPTCHA STYLES --- */
+      .captcha-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255,255,255,0.05);
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid var(--dark);
+      }
+      #captcha-canvas {
+        background: rgba(0,0,0,0.3);
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .captcha-refresh {
+        color: var(--sec);
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: transform 0.3s;
+      }
+      .captcha-refresh:hover { transform: rotate(180deg); color: var(--accent); }
+      #captcha-input {
+        width: 100%;
+        text-align: center;
+        letter-spacing: 2px;
+        font-weight: bold;
+      }
+
+      /* --- REVERTED BUTTON STYLE --- */
       .btn-primary {
         background: var(--accent);
         color: var(--bg);
@@ -145,14 +176,14 @@
       }
       .circle-base:active { transform: scale(0.98); }
 
-      /* --- UPDATED START BUTTON STYLE --- */
+      /* START BUTTON STYLE */
       #start-text {
-        font-family: var(--font-display); /* Changed to Cinzel */
+        font-family: var(--font-display); 
         font-size: 3rem; 
-        letter-spacing: 5px; /* Wider tracking */
+        letter-spacing: 5px; 
         pointer-events: none;
         font-weight: 700;
-        text-shadow: 0 0 10px rgba(255,255,255,0.3); /* Subtle Glow */
+        text-shadow: 0 0 10px rgba(255,255,255,0.3);
       }
 
       #result-img {
@@ -311,12 +342,23 @@
 
     <!-- LOGIN VIEW -->
     <div id="view-login" class="view active-view">
+      <!-- LOGO REMOVED -->
       <h1 class="login-title">Login</h1>
+      
       <form id="login-form">
         <input type="text" id="u-in" placeholder="Username" required autocomplete="off">
         <input type="password" id="p-in" placeholder="Password" required>
+        
+        <!-- CAPTCHA SECTION -->
+        <div class="captcha-wrapper">
+          <canvas id="captcha-canvas" width="120" height="40" onclick="generateCaptcha()"></canvas>
+          <i class="fas fa-sync-alt captcha-refresh" onclick="generateCaptcha()"></i>
+        </div>
+        <input type="text" id="captcha-input" placeholder="Enter Captcha" required autocomplete="off">
+        
         <button type="submit" class="btn-primary">Enter to feel Happiness</button>
       </form>
+      
       <div id="login-error" class="hidden">
         Invalid credentials. <br> <a href="mailto:infquantumspace@gmail.com">Please contact admin</a>
       </div>
@@ -415,10 +457,12 @@
       let currentRole = null;
       let currentImage = null;
       let inactivityTimer;
+      let currentCaptchaCode = "";
 
       window.onload = function() {
         applyRandomTheme();
         startInactivityTimer();
+        generateCaptcha(); // Initial Captcha
       };
       document.addEventListener('click', resetInactivityTimer);
       document.addEventListener('touchstart', resetInactivityTimer);
@@ -428,10 +472,76 @@
       function applyRandomTheme() { document.body.className = ['theme-1', 'theme-2', 'theme-3', 'theme-4', 'theme-5'][Math.floor(Math.random() * 5)]; }
       function logout() { location.reload(); }
 
+      // --- CAPTCHA GENERATOR ---
+      function generateCaptcha() {
+        const canvas = document.getElementById('captcha-canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        // Background noise (light)
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.fillRect(0, 0, width, height);
+        
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "";
+        
+        // Get theme accent color
+        const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+        const secColor = getComputedStyle(document.body).getPropertyValue('--sec').trim();
+        
+        ctx.font = "20px 'Cinzel'";
+        ctx.textBaseline = "middle";
+        
+        for(let i=0; i<5; i++) {
+          const char = chars.charAt(Math.floor(Math.random() * chars.length));
+          code += char;
+          
+          ctx.save();
+          // Randomize pos
+          const x = 15 + i * 20;
+          const y = height/2 + (Math.random() * 10 - 5);
+          const angle = (Math.random() * 0.4) - 0.2;
+          
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          
+          ctx.fillStyle = "#ffffff"; // White text for contrast
+          ctx.shadowColor = accentColor;
+          ctx.shadowBlur = 5;
+          
+          ctx.fillText(char, 0, 0);
+          ctx.restore();
+        }
+        
+        // Lines for noise
+        for(let i=0; i<3; i++) {
+          ctx.strokeStyle = "rgba(255,255,255,0.3)";
+          ctx.beginPath();
+          ctx.moveTo(Math.random() * width, Math.random() * height);
+          ctx.lineTo(Math.random() * width, Math.random() * height);
+          ctx.stroke();
+        }
+        
+        currentCaptchaCode = code;
+        document.getElementById('captcha-input').value = ""; // Clear input
+      }
+
       // LOGIN
       const loginForm = document.getElementById('login-form');
       loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        // CAPTCHA CHECK
+        const userCaptcha = document.getElementById('captcha-input').value.toUpperCase();
+        if (userCaptcha !== currentCaptchaCode) {
+          alert("Incorrect Captcha. Please try again.");
+          generateCaptcha(); // Reset on fail
+          return;
+        }
+
         const u = document.getElementById('u-in').value;
         const p = document.getElementById('p-in').value;
         const btn = loginForm.querySelector('button');
@@ -452,6 +562,7 @@
           document.getElementById('login-error').classList.remove('hidden');
           btn.innerText = originalText;
           btn.disabled = false;
+          generateCaptcha(); // Reset on fail
         }
       });
 
